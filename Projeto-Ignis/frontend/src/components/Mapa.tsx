@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import MapComponent from './MapComponent';
 import { MapaContainer } from '../styles/MapaContainer';
-import { FiltrosMapa } from '../entities/FiltroMapa';
+import { FiltrosMapa } from '../entities/FiltrosMapa';
 import { BaseDado } from '../entities/BaseDado';
 
 interface MapaProps {

@@ -11,6 +11,12 @@ app.use(express.json());
 // 🔽 Adicione essa linha para servir arquivos estáticos GeoJSON
 app.use(express.static(path.join(__dirname, '../../public')));
 
+app.use('/api/brasil', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../public/geojson/brasil.geojson'));
+});
+
+app.use('/api/estados', express.static(path.join(__dirname, '../../public/geojson/estados.geojson')));
+
 app.use('/api', ocorrenciaRoutes);
 
 export default app;

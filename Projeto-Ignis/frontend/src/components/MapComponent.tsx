@@ -19,6 +19,7 @@ interface BaseDado {
 interface Props {
   dados: BaseDado[];
   filtros: {
+    estado?: string;
     bioma: string;
     inicio?: string;
     fim?: string;
@@ -76,8 +77,9 @@ const normalizar = (str: string) =>
 const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
   const [geojsonBiomas, setGeojsonBiomas] = useState<FeatureCollection | null>(null);
   const [geojsonAreaQueimada, setGeojsonAreaQueimada] = useState<FeatureCollection | null>(null);
+  const [geojsonBrasil, setGeojsonBrasil] = useState<FeatureCollection | null>(null);
+  const [geojsonEstados, setGeojsonEstados] = useState<FeatureCollection | null>(null);
 
-  // Carrega o GeoJSON dos biomas
   useEffect(() => {
     fetch('/biomas.geojson')
       .then(res => res.json())
@@ -85,27 +87,48 @@ const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
       .catch(err => console.error('Erro ao carregar biomas:', err));
   }, []);
 
-  // Carrega GeoJSON da área queimada por mês (quando só houver 'inicio')
   useEffect(() => {
-  if (tipo === 'area_queimada' && filtros.inicio && !filtros.fim) {
-    fetch(`/geojson/area_queimada/${filtros.inicio}.geojson`)
-      .then(res => {
-        if (!res.ok) throw new Error('GeoJSON não encontrado');
-        return res.json();
-      })
-      .then(setGeojsonAreaQueimada)
-      .catch(err => {
-        console.error('Erro ao carregar área queimada por mês:', err);
-        setGeojsonAreaQueimada(null);
-      });
-  } else {
-    setGeojsonAreaQueimada(null);
-  }
-}, [tipo, filtros.inicio, filtros.fim]);
+    if (tipo === 'area_queimada' && filtros.inicio && !filtros.fim) {
+      fetch(`/geojson/area_queimada/${filtros.inicio}.geojson`)
+        .then(res => {
+          if (!res.ok) throw new Error('GeoJSON não encontrado');
+          return res.json();
+        })
+        .then(setGeojsonAreaQueimada)
+        .catch(err => {
+          console.error('Erro ao carregar área queimada por mês:', err);
+          setGeojsonAreaQueimada(null);
+        });
+    } else {
+      setGeojsonAreaQueimada(null);
+    }
+  }, [tipo, filtros.inicio, filtros.fim]);
+
+  useEffect(() => {
+    fetch('/api/brasil')
+      .then(res => res.json())
+      .then(setGeojsonBrasil)
+      .catch(err => console.error('Erro ao carregar brasil.geojson:', err));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/estados')
+      .then(res => res.json())
+      .then(setGeojsonEstados)
+      .catch(err => console.error('Erro ao carregar estados.geojson:', err));
+  }, []);
 
   const biomaIdToNome: Record<number, string> = {
     1: 'Amazônia', 2: 'Caatinga', 3: 'Cerrado', 4: 'Mata Atlântica', 5: 'Pampa', 6: 'Pantanal'
   };
+
+  const contornoEstadoSelecionado = useMemo(() => {
+    if (!geojsonEstados || !filtros.estado) return null;
+    const estadoId = Number(filtros.estado);
+    const filtrado = geojsonEstados.features.filter((f) => Number(f.properties?.id) === estadoId);
+    if (filtrado.length === 0) return null;
+    return { ...geojsonEstados, features: filtrado };
+  }, [geojsonEstados, filtros.estado]);
 
   const contornoFiltrado = useMemo(() => {
     if (!geojsonBiomas || !filtros.bioma) return null;
@@ -138,6 +161,22 @@ const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
   return (
     <MapContainer center={[-15.78, -47.92]} zoom={4} style={{ height: '100vh', width: '100%' }} maxBounds={brasilBounds} maxBoundsViscosity={1.0}>
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
+
+      {contornoEstadoSelecionado && (
+        <GeoJSON
+          key={filtros.estado}
+          data={contornoEstadoSelecionado}
+          style={() => ({
+            color: '#0066FF',
+            weight: 3,
+            fillOpacity: 0.05
+          })}
+        />
+      )}
+
+      {geojsonBrasil && (
+        <GeoJSON data={geojsonBrasil} style={{ color: 'black', weight: 3, fillOpacity: 0 }} />
+      )}
 
       {tipo === 'risco' && dadosRiscoPorEstado.map((item, idx) => (
         <Marker

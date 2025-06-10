@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiltrosMapa } from '../entities/FiltroMapa';
+import type { FiltrosMapa } from '../entities/FiltrosMapa';
 import {
   FiltroContainer,
   FiltrosContainer,
@@ -91,7 +91,7 @@ const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
     const inicioDate = new Date(inicio);
     const datas: string[] = [];
 
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 30; i++) {
       const novaData = new Date(inicioDate);
       novaData.setDate(inicioDate.getDate() + i);
       datas.push(novaData.toISOString().split('T')[0]);
@@ -126,7 +126,7 @@ const FiltroMapa: React.FC<FiltroMapaProps> = ({ onFiltrar }) => {
 
   const limparFiltro = () => {
     navigate('/');
-    setTipo('risco');
+    setTipo('');
     setEstado('');
     setBioma('');
     setInicio('');
