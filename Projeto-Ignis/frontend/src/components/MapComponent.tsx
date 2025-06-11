@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import type { FeatureCollection } from 'geojson';
 
@@ -79,6 +79,7 @@ const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
   const [geojsonAreaQueimada, setGeojsonAreaQueimada] = useState<FeatureCollection | null>(null);
   const [geojsonBrasil, setGeojsonBrasil] = useState<FeatureCollection | null>(null);
   const [geojsonEstados, setGeojsonEstados] = useState<FeatureCollection | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     fetch('/biomas.geojson')
@@ -159,7 +160,16 @@ const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
   }, [dados, tipo]);
 
   return (
-    <MapContainer center={[-15.78, -47.92]} zoom={4} style={{ height: '100vh', width: '100%' }} maxBounds={brasilBounds} maxBoundsViscosity={1.0}>
+    <MapContainer
+      center={[-15.78, -47.92]}
+      zoom={4}
+      style={{ height: '100vh', width: '100%' }}
+      maxBounds={brasilBounds}
+      maxBoundsViscosity={1.0}
+      whenReady={(map) => {
+        mapRef.current = map;
+      }}
+    >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
 
       {contornoEstadoSelecionado && (
