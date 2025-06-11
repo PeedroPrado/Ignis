@@ -1,5 +1,5 @@
 import * as L from 'leaflet';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import type { FeatureCollection } from 'geojson';
 
@@ -71,10 +71,41 @@ const centroEstados: Record<string, { lat: number; lon: number }> = {
   'Tocantins': { lat: -10.25, lon: -48.25 }
 };
 
+const centroEstadosPorId: Record<string, { lat: number; lon: number }> = {
+  '12': centroEstados['Acre'],
+  '27': centroEstados['Alagoas'],
+  '16': centroEstados['Amapá'],
+  '13': centroEstados['Amazonas'],
+  '29': centroEstados['Bahia'],
+  '23': centroEstados['Ceará'],
+  '32': centroEstados['Espírito Santo'],
+  '52': centroEstados['Goiás'],
+  '21': centroEstados['Maranhão'],
+  '51': centroEstados['Mato Grosso'],
+  '50': centroEstados['Mato Grosso do Sul'],
+  '31': centroEstados['Minas Gerais'],
+  '15': centroEstados['Pará'],
+  '25': centroEstados['Paraíba'],
+  '41': centroEstados['Paraná'],
+  '26': centroEstados['Pernambuco'],
+  '22': centroEstados['Piauí'],
+  '33': centroEstados['Rio de Janeiro'],
+  '24': centroEstados['Rio Grande do Norte'],
+  '43': centroEstados['Rio Grande do Sul'],
+  '11': centroEstados['Rondônia'],
+  '14': centroEstados['Roraima'],
+  '42': centroEstados['Santa Catarina'],
+  '35': centroEstados['São Paulo'],
+  '28': centroEstados['Sergipe'],
+  '17': centroEstados['Tocantins'],
+  '53': centroEstados['Distrito Federal']
+};
+
 const normalizar = (str: string) =>
   str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
 const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
+  const mapRef = useRef<L.Map | null>(null);
   const [geojsonBiomas, setGeojsonBiomas] = useState<FeatureCollection | null>(null);
   const [geojsonAreaQueimada, setGeojsonAreaQueimada] = useState<FeatureCollection | null>(null);
   const [geojsonBrasil, setGeojsonBrasil] = useState<FeatureCollection | null>(null);
@@ -118,6 +149,18 @@ const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
       .catch(err => console.error('Erro ao carregar estados.geojson:', err));
   }, []);
 
+  useEffect(() => {
+    if (!mapRef.current) return;
+    if (filtros.estado) {
+      const centro = centroEstadosPorId[filtros.estado];
+      if (centro) {
+        mapRef.current.flyTo([centro.lat, centro.lon], 6);
+      }
+    } else {
+      mapRef.current.flyTo([-15.78, -47.92], 4);
+    }
+  }, [filtros.estado]);
+
   const biomaIdToNome: Record<number, string> = {
     1: 'Amazônia', 2: 'Caatinga', 3: 'Cerrado', 4: 'Mata Atlântica', 5: 'Pampa', 6: 'Pantanal'
   };
@@ -159,7 +202,14 @@ const MapComponent: React.FC<Props> = ({ dados, filtros, tipo }) => {
   }, [dados, tipo]);
 
   return (
-    <MapContainer center={[-15.78, -47.92]} zoom={4} style={{ height: '100vh', width: '100%' }} maxBounds={brasilBounds} maxBoundsViscosity={1.0}>
+    <MapContainer
+      center={[-15.78, -47.92]}
+      zoom={4}
+      style={{ height: '100vh', width: '100%' }}
+      maxBounds={brasilBounds}
+      maxBoundsViscosity={1.0}
+      whenCreated={(map) => (mapRef.current = map)}
+    >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
 
       {contornoEstadoSelecionado && (
