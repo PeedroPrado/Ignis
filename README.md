@@ -52,8 +52,7 @@ cd Projeto-Ignis
 
 ```bash
 npm install            # na raiz (instala dependências dos workspaces)
-npm install --prefix backend
-npm install --prefix frontend
+npm run dev # na raiz (inicia o backend e o frontend)
 ```
 
 ### 3. Configurar o banco de dados
