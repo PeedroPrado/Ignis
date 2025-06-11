@@ -130,4 +130,4 @@ Sinta-se à vontade para contribuir com melhorias, novos filtros ou refatoraçõ
 
 ## 📝 Licença
 
-Este projeto está sob a licença MIT.
+Este projeto está sob a licença de CAPYDEV
